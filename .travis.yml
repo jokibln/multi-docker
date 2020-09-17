@@ -1,0 +1,22 @@
+language: generic
+services: 
+  - docker
+
+before_install:
+  - docker build -t jokibln/react-test -f Dockerfile.dev ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true jokibln/react-test npm run test
+
+after_success:
+  - docker build -t jokibln/multi-client ./client
+  - docker build -t jokibln/multi-nginx ./nginx
+  - docker build -t jokibln/multi-server ./server
+  - docker build -t jokibln/multi-worker ./worker
+  # Log in to the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Take those images and push them to docker hub
+  - docker push jokibln/multi-client
+  - docker push jokibln/multi-nginx
+  - docker push jokibln/multi-server
+  - docker push jokibln/multi-worker
